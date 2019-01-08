@@ -64,6 +64,22 @@
     return _bannerView;
 }
 
+- (void) load
+{
+    if (_bannerView != nil) {
+        [_bannerView loadAdAndShow];
+    }
+}
+
+- (void)dealloc
+{
+    if (_bannerView != nil) {
+        _bannerView.delegate = NULL;
+        _bannerView.currentViewController = NULL;
+        _bannerView = NULL;
+    }
+}
+
 #pragma mark - GDTMobBannerViewDelegate
 // 请求广告条数据成功后调用
 //
@@ -128,6 +144,18 @@
 {
     NSLog(@"bannerViewDidPresentFullScreenModal");
     [_channel invokeMethod:@"bannerViewDidPresentFullScreenModal" arguments:@""];
+}
+
+- (void) bannerViewWillClose
+{
+    NSLog(@"bannerViewWillClose");
+    [_channel invokeMethod:@"bannerViewWillClose" arguments:@""];
+}
+
+- (void) bannerViewWillExposure
+{
+    NSLog(@"bannerViewWillExposure");
+    [_channel invokeMethod:@"bannerViewWillExposure" arguments:@""];
 }
 
 @end

@@ -45,6 +45,7 @@ enum GDTEventType {
   interstitialWillPresentScreen,
   interstitialDidPresentScreen,
   interstitialDidDismissScreen,
+  interstitialClicked,
   interstitialApplicationWillEnterBackground,
 
   // 开屏广告
@@ -315,7 +316,24 @@ class _FlutterGDTBannerViewState extends State<FlutterGDTBannerView> {
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return Text("dddd");
+      return AndroidView(
+        viewType: "plugins.hetian.me/gdtview_banner",
+        creationParams: {
+          "placementId": widget.placementId,
+          "interval": widget.interval,
+          "isAnimationOn": widget.isAnimation,
+          "showCloseBtn": widget.showClose,
+          "isGpsOn": widget.isGpsOn,
+          "size": widget.size,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: _onPlatformViewCreated,
+        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+          new Factory<OneSequenceGestureRecognizer>(
+                    () => new EagerGestureRecognizer(),
+          ),
+        ].toSet(),
+      );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
         viewType: "plugins.hetian.me/gdtview_banner",
@@ -365,6 +383,8 @@ enum GDTBannerEventType {
   bannerViewWillDismissFullScreenModal,
   bannerViewWillPresentFullScreenModal,
   bannerViewDidPresentFullScreenModal,
+  bannerViewWillExposure,
+  bannerViewWillClose,
 }
 
 class FlutterGDTBannerController {
@@ -373,6 +393,11 @@ class FlutterGDTBannerController {
   FlutterGDTBannerController._(int id)
       : _channel = MethodChannel('plugins.hetian.me/gdtview_banner_$id') {
     _channel.setMethodCallHandler(_handleMessages);
+  }
+
+  // 刷新广告
+  Future<dynamic> load() {
+    _channel.invokeMethod("load", "");
   }
 
   Future<Null> _handleMessages(MethodCall call) async {
@@ -422,6 +447,18 @@ class FlutterGDTBannerController {
           _listens[GDTBannerEventType.bannerViewDidPresentFullScreenModal]("");
         }
         break;
+      case "bannerViewWillClose":
+        if (_listens.containsKey(
+                GDTBannerEventType.bannerViewWillClose)) {
+          _listens[GDTBannerEventType.bannerViewWillClose]("");
+        }
+        break;
+      case "bannerViewWillExposure":
+        if (_listens.containsKey(
+                GDTBannerEventType.bannerViewWillExposure)) {
+          _listens[GDTBannerEventType.bannerViewWillExposure]("");
+        }
+        break;
     }
   }
 
@@ -453,7 +490,7 @@ class FlutterGDTNativeView extends StatefulWidget {
     @required this.videoMuted,
     @required this.onCreate,
   })  : assert(placementId != null, "广告位ID必须"),
-        assert(height != null, "广告位高度"),
+        assert(height != null || width != null, "广告位尺寸必须设置，最大宽、最大高可以设置为-1"),
         super(key: key);
 
   @override
@@ -470,7 +507,23 @@ class _FlutterGDTNativeViewState extends State<FlutterGDTNativeView> {
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return Text("dddd");
+      return AndroidView(
+        viewType: "plugins.hetian.me/gdtview_native",
+        creationParams: {
+          "placementId": widget.placementId,
+          "width": widget.width,
+          "height": widget.height,
+          "videoAutoPlayOnWWAN": widget.videoAutoPlayOnWWAN,
+          "videoMuted": widget.videoMuted,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: _onPlatformViewCreated,
+        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+          new Factory<OneSequenceGestureRecognizer>(
+                    () => new EagerGestureRecognizer(),
+          ),
+        ].toSet(),
+      );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
         viewType: "plugins.hetian.me/gdtview_native",

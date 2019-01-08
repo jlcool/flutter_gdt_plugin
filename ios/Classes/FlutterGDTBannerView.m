@@ -37,6 +37,9 @@
 
 - (void)onMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result
 {
+    if ([@"load" isEqual:call.method]) {
+        [gdtBanner load];
+    }
 }
 
 // 如有特殊参数修正可在此处处理

@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface GDTBanner : UIView
 @property (nonatomic, strong) FlutterMethodChannel* channel;
 - (instancetype)initWithFlutter:(NSDictionary *)args channel:(FlutterMethodChannel*)channel vid:(int64_t)vid;
+- (void) load;
 @end
 
 NS_ASSUME_NONNULL_END

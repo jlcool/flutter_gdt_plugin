@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gdtslogan">GDTslogan</string>
+    <string name="click_to_skip">点击跳过</string>
+    <string name="splashID">SplashActivity</string>
+</resources>

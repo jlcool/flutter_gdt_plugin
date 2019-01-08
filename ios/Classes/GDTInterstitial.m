@@ -65,6 +65,15 @@
                                                                 }, @"tag": _tag}];
 }
 
+// 插屏广告点击回调
+//
+// 详解: 插屏广告点击回调该函数
+- (void)interstitialClicked:(GDTMobInterstitial *)interstitial
+{
+    NSLog(@"interstitialClicked");
+    [pluginChannel invokeMethod:@"interstitialClicked" arguments:@{@"tag": _tag}];
+}
+
 // 插屏广告将要展示回调
 //
 // 详解: 插屏广告即将展示回调该函数
