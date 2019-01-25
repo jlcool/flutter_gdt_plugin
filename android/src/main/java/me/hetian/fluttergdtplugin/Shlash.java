@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 
+import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.ads.interstitial.AbstractInterstitialADListener;
 import com.qq.e.ads.interstitial.InterstitialAD;
 import com.qq.e.comm.util.AdError;
@@ -24,6 +25,7 @@ public class Shlash {
     }
 
     public void show() {
+        MultiProcessFlag.setMultiProcess(true);
         Intent intent = new Intent(mActivity, SplashActivity.class);
         intent.putExtra("appid", appid);
         intent.putExtra("pos_id", placementId);

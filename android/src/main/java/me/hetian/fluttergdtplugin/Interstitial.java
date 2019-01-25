@@ -3,6 +3,7 @@ package me.hetian.fluttergdtplugin;
 import android.app.Activity;
 import android.util.Log;
 
+import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.ads.interstitial.AbstractInterstitialADListener;
 import com.qq.e.ads.interstitial.InterstitialAD;
 import com.qq.e.comm.util.AdError;
@@ -26,6 +27,7 @@ public class Interstitial {
     }
 
     public void show() {
+        MultiProcessFlag.setMultiProcess(true);
         final InterstitialAD iad = new InterstitialAD(mActivity, appid, placementId);
         iad.setADListener(new AbstractInterstitialADListener() {
 

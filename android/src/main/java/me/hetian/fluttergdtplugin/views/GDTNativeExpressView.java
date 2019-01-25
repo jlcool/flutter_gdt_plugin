@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.ads.cfg.VideoOption;
 import com.qq.e.ads.nativ.ADSize;
 import com.qq.e.ads.nativ.NativeExpressAD;
@@ -42,6 +43,8 @@ public class GDTNativeExpressView implements PlatformView, MethodChannel.MethodC
         methodChannel.setMethodCallHandler(this);
         mParams = params;
         _view = new FrameLayout(mActivity);
+
+        MultiProcessFlag.setMultiProcess(true);
         nativeExpressAD = new NativeExpressAD(mActivity, getMyADSize(params), FlutterGdtPlugin.appid, (String) mParams.get("placementId"), this); // 传入Activity
         // 注意：如果您在联盟平台上新建原生模板广告位时，选择了支持视频，那么可以进行个性化设置（可选）
         nativeExpressAD.setVideoOption(new VideoOption.Builder()

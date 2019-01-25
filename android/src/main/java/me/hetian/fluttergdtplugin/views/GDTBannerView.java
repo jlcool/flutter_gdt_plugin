@@ -8,6 +8,7 @@ import android.view.View;
 import com.qq.e.ads.banner.ADSize;
 import com.qq.e.ads.banner.AbstractBannerADListener;
 import com.qq.e.ads.banner.BannerView;
+import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.comm.util.AdError;
 import com.qq.e.comm.util.GDTLogger;
 
@@ -35,6 +36,8 @@ public class GDTBannerView implements PlatformView, MethodChannel.MethodCallHand
         methodChannel = new MethodChannel(messenger, "plugins.hetian.me/gdtview_banner_" + id);
         methodChannel.setMethodCallHandler(this);
         mParams = params;
+
+        MultiProcessFlag.setMultiProcess(true);
 
         bv = new BannerView(mActivity, ADSize.BANNER, FlutterGdtPlugin.appid, (String) mParams.get("placementId"));
         bv.setADListener(new AbstractBannerADListener() {

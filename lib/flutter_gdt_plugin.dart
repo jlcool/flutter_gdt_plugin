@@ -29,7 +29,7 @@ class FlutterGdtPlugin {
 
   // 展示开屏广告
   static Future<dynamic> showSplash(String id, String tag) {
-    return _channel.invokeMethod("shlash", {"placementId": id, "tag": tag});
+    return _channel.invokeMethod("splash", {"placementId": id, "tag": tag});
   }
 
   // 关闭开屏广告
@@ -77,6 +77,7 @@ class FlutterGdtPluginController {
       return Future.value(null);
     }
     String tag = call.arguments["tag"];
+    print(['GDT METHOD', call.method]);
     switch (call.method) {
       case "interstitialSuccessToLoadAd":
         if (_tags.indexOf(tag) == -1) {
@@ -365,7 +366,6 @@ class _FlutterGDTBannerViewState extends State<FlutterGDTBannerView> {
   }
 
   void _onPlatformViewCreated(int id) {
-    print("viewID$id");
     if (widget.onCreate == null) {
       return;
     }
