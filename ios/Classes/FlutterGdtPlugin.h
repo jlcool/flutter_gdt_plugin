@@ -5,4 +5,5 @@
 + (instancetype) sharedInstance;
 - (void) removeGDTInterstitial;
 - (void) removeGDTShlash;
+@property (nonatomic, retain) FlutterMethodChannel *channel;
 @end

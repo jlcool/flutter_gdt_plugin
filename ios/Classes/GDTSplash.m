@@ -60,7 +60,7 @@
 - (void)splashAdSuccessPresentScreen:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdSuccessPresentScreen");
-    [pluginChannel invokeMethod:@"splashAdSuccessPresentScreen" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdSuccessPresentScreen" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -69,7 +69,7 @@
 - (void)splashAdFailToPresent:(GDTSplashAd *)splashAd withError:(NSError *)error
 {
     NSLog(@"splashAdFailToPresent");
-    [pluginChannel invokeMethod:@"splashAdFailToPresent" arguments:@{@"error": @{
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdFailToPresent" arguments:@{@"error": @{
                                                                 @"msg": error.localizedDescription,
                                                                 @"code": @(error.code),
                                                                 }, @"tag": _tag}];
@@ -82,7 +82,7 @@
 - (void)splashAdApplicationWillEnterBackground:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdApplicationWillEnterBackground");
-    [pluginChannel invokeMethod:@"splashAdApplicationWillEnterBackground" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdApplicationWillEnterBackground" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -91,7 +91,7 @@
 - (void)splashAdExposured:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdExposured");
-    [pluginChannel invokeMethod:@"splashAdExposured" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdExposured" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -100,7 +100,7 @@
 - (void)splashAdClicked:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdClicked");
-    [pluginChannel invokeMethod:@"splashAdClicked" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdClicked" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -111,7 +111,7 @@
     NSLog(@"splashAdWillClosed");
     self.splashAd = nil;
     [FlutterGdtPlugin.sharedInstance removeGDTShlash];
-    [pluginChannel invokeMethod:@"splashAdWillClosed" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillClosed" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -120,7 +120,7 @@
 - (void)splashAdClosed:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdClosed");
-    [pluginChannel invokeMethod:@"splashAdClosed" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdClosed" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -129,7 +129,7 @@
 - (void)splashAdWillPresentFullScreenModal:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdWillPresentFullScreenModal");
-    [pluginChannel invokeMethod:@"splashAdWillPresentFullScreenModal" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillPresentFullScreenModal" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -138,7 +138,7 @@
 - (void)splashAdDidPresentFullScreenModal:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdDidPresentFullScreenModal");
-    [pluginChannel invokeMethod:@"splashAdDidPresentFullScreenModal" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdDidPresentFullScreenModal" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -147,7 +147,7 @@
 - (void)splashAdWillDismissFullScreenModal:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdWillDismissFullScreenModal");
-    [pluginChannel invokeMethod:@"splashAdWillDismissFullScreenModal" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillDismissFullScreenModal" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -156,7 +156,7 @@
 - (void)splashAdDidDismissFullScreenModal:(GDTSplashAd *)splashAd
 {
     NSLog(@"splashAdDidDismissFullScreenModal");
-    [pluginChannel invokeMethod:@"splashAdDidDismissFullScreenModal" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdDidDismissFullScreenModal" arguments:@{@"tag": _tag}];
 }
 
 /**
@@ -165,7 +165,7 @@
 - (void)splashAdLifeTime:(NSUInteger)time
 {
     NSLog(@"splashAdLifeTime ----> %ld", time);
-    [pluginChannel invokeMethod:@"splashAdLifeTime" arguments:@{@"time": @(time), @"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdLifeTime" arguments:@{@"time": @(time), @"tag": _tag}];
 }
 
 @end

@@ -50,7 +50,7 @@
 {
     [self showAd];
     NSLog(@"interstitialSuccessToLoadAd");
-    [pluginChannel invokeMethod:@"interstitialSuccessToLoadAd" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialSuccessToLoadAd" arguments:@{@"tag": _tag}];
 }
 
 // 广告预加载失败回调
@@ -59,7 +59,7 @@
 - (void)interstitialFailToLoadAd:(GDTMobInterstitial *)interstitial error:(NSError *)error
 {
     NSLog(@"interstitialFailToLoadAd");
-    [pluginChannel invokeMethod:@"interstitialFailToLoadAd" arguments:@{@"error": @{
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialFailToLoadAd" arguments:@{@"error": @{
                                                                 @"msg": error.localizedDescription,
                                                                 @"code": @(error.code),
                                                                 }, @"tag": _tag}];
@@ -71,7 +71,7 @@
 - (void)interstitialClicked:(GDTMobInterstitial *)interstitial
 {
     NSLog(@"interstitialClicked");
-    [pluginChannel invokeMethod:@"interstitialClicked" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialClicked" arguments:@{@"tag": _tag}];
 }
 
 // 插屏广告将要展示回调
@@ -80,7 +80,7 @@
 - (void)interstitialWillPresentScreen:(GDTMobInterstitial *)interstitial
 {
     NSLog(@"interstitialWillPresentScreen");
-    [pluginChannel invokeMethod:@"interstitialWillPresentScreen" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialWillPresentScreen" arguments:@{@"tag": _tag}];
 }
 
 // 插屏广告视图展示成功回调
@@ -89,7 +89,7 @@
 - (void)interstitialDidPresentScreen:(GDTMobInterstitial *)interstitial
 {
     NSLog(@"interstitialDidPresentScreen");
-    [pluginChannel invokeMethod:@"interstitialDidPresentScreen" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialDidPresentScreen" arguments:@{@"tag": _tag}];
 }
 
 // 插屏广告展示结束回调
@@ -100,7 +100,7 @@
     self.interstitial = nil;
     [FlutterGdtPlugin.sharedInstance removeGDTInterstitial];
     NSLog(@"interstitialDidDismissScreen");
-    [pluginChannel invokeMethod:@"interstitialDidDismissScreen" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialDidDismissScreen" arguments:@{@"tag": _tag}];
 }
 
 // 应用进入后台时回调
@@ -109,7 +109,7 @@
 - (void)interstitialApplicationWillEnterBackground:(GDTMobInterstitial *)interstitial
 {
     NSLog(@"interstitialApplicationWillEnterBackground");
-    [pluginChannel invokeMethod:@"interstitialApplicationWillEnterBackground" arguments:@{@"tag": _tag}];
+    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"interstitialApplicationWillEnterBackground" arguments:@{@"tag": _tag}];
 }
 
 @end

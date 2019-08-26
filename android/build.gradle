@@ -16,6 +16,7 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -49,6 +50,8 @@ dependencies {
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation files('libs/GDTUnionSDK.4.22.584.min.jar')
-//    implementation files('libs/android-query-full.0.26.7.jar')
+    implementation('com.github.androidquery:androidquery:0.26.9'){
+        exclude module: 'androidquery'
+    }
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 }

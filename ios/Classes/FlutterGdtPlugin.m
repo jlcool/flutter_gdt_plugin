@@ -27,7 +27,7 @@
     pluginChannel = [FlutterMethodChannel
                methodChannelWithName:@"plugins.hetian.me/gdt_plugins"
                binaryMessenger:[registrar messenger]];
-    FlutterGdtPlugin* instance = [FlutterGdtPlugin sharedInstance];
+    FlutterGdtPlugin* instance = [[FlutterGdtPlugin sharedInstance] initWithChannel:pluginChannel];
     
     [registrar addMethodCallDelegate:instance channel:pluginChannel];
 }
@@ -36,15 +36,16 @@
 {
     static FlutterGdtPlugin *instance = nil;
     if (!instance) {
-        instance = [[FlutterGdtPlugin alloc] initWithViewController: [UIApplication sharedApplication].delegate.window.rootViewController];
+        instance = [[FlutterGdtPlugin alloc] init];
     }
     return instance;
 }
 
-- (instancetype)initWithViewController:(UIViewController *)viewController {
+- (instancetype)initWithChannel:(FlutterMethodChannel *)channel {
     self = [super init];
     if (self) {
-        self.viewController = viewController;
+        self.channel = channel;
+        self.viewController = [UIApplication sharedApplication].delegate.window.rootViewController;
     }
     return self;
 }
