@@ -2,10 +2,14 @@ package me.hetian.fluttergdtplugin.views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
+import com.qq.e.ads.banner2.UnifiedBannerView;
 import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.ads.cfg.VideoOption;
 import com.qq.e.ads.nativ.ADSize;
@@ -16,211 +20,144 @@ import com.qq.e.comm.constants.AdPatternType;
 import com.qq.e.comm.pi.AdData;
 import com.qq.e.comm.util.AdError;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
 import me.hetian.fluttergdtplugin.FlutterGdtPlugin;
 
 
-public class GDTNativeExpressView implements PlatformView, MethodChannel.MethodCallHandler, NativeExpressAD.NativeExpressADListener {
-    private final MethodChannel methodChannel;
-    private final Context mContext;
-    private final Activity mActivity;
-    private final Map<String, Object> mParams;
-    private NativeExpressAD nativeExpressAD;
-    private final FrameLayout _view;
-    private NativeExpressADView nativeExpressADView;
+public class GDTNativeExpressView implements PlatformView, NativeExpressAD.NativeExpressADListener{
 
-    @SuppressWarnings("unchecked")
-    public GDTNativeExpressView(Context context, Activity activity, BinaryMessenger messenger, int id, Map<String, Object> params) {
-        mContext = context;
-        mActivity = activity;
-        methodChannel = new MethodChannel(messenger, "plugins.hetian.me/gdtview_native_" + id);
-        methodChannel.setMethodCallHandler(this);
-        mParams = params;
-        _view = new FrameLayout(mActivity);
+    PluginRegistry.Registrar mRegistrar;
+    Context mContext;
+    int viewID;
+    NativeExpressAD expressAD;
+    Map<String, Object> params;
+    MethodChannel methodChannel;
+    Activity mActivity;
+    FrameLayout layout;
 
-        MultiProcessFlag.setMultiProcess(true);
-        nativeExpressAD = new NativeExpressAD(mActivity, getMyADSize(params), FlutterGdtPlugin.appid, (String) mParams.get("placementId"), this); // 传入Activity
-        // 注意：如果您在联盟平台上新建原生模板广告位时，选择了支持视频，那么可以进行个性化设置（可选）
-        nativeExpressAD.setVideoOption(new VideoOption.Builder()
-                .setAutoPlayPolicy(VideoOption.AutoPlayPolicy.WIFI) // WIFI 环境下可以自动播放视频
-                .setAutoPlayMuted(true) // 自动播放时为静音
-                .build()); //
-        nativeExpressAD.loadAD(1);
+    public GDTNativeExpressView(Context context, PluginRegistry.Registrar registrar, int id, Map<String, Object> args){
+        this.mContext = context;
+        this.mActivity = registrar.activity();
+        this.mRegistrar = registrar;
+        this.viewID = id;
+        this.params = args;
+        methodChannel = new MethodChannel(registrar.messenger(), "plugins.hetian.me/gdtview_express/" + id);
+
+        layout = new FrameLayout(mContext);
+        layout.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        getExpressAD().loadAD(1);
     }
+
+    private NativeExpressAD getExpressAD() {
+        String posId = (String) params.get("posId");
+        expressAD = new NativeExpressAD(mActivity, new ADSize(ADSize.FULL_WIDTH, ADSize.AUTO_HEIGHT), FlutterGdtPlugin.appid, posId, this);
+        return expressAD;
+    }
+
     @Override
     public View getView() {
-        return _view;
+        return layout;
     }
 
     @Override
     public void dispose() {
-        nativeExpressADView = null;
-        nativeExpressAD = null;
+        expressAD = null;
+        if (layout != null) {
+            layout.removeAllViews();
+            layout = null;
+        }
+        params = null;
     }
 
-
-    private ADSize getMyADSize(Map<String, Object> params) {
-        Log.i("getMyADSize", "getMyADSize: " + params.get("width"));
-
-        Double width = Double.valueOf((double) params.get("width"));
-        Double height = Double.valueOf((double) params.get("width"));
-        int w = width == -1 ? ADSize.FULL_WIDTH : width.intValue();
-        int h = height == -1 ? ADSize.AUTO_HEIGHT : height.intValue();
-        return new ADSize(w, h);
-    }
+    // --> NativeExpressAD.NativeExpressADListener
 
     @Override
-    public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
-
-    }
-
-    @Override
-    public void onADLoaded(List<NativeExpressADView> adList) {
-        Log.i("onADLoaded", "onADLoaded: " + adList.size());
-        // 释放前一个 NativeExpressADView 的资源
-        if (nativeExpressADView != null) {
-            nativeExpressADView.destroy();
+    public void onADLoaded(List<NativeExpressADView> list) {
+        if (list.isEmpty()) {
+            return ;
         }
-        // 3.返回数据后，SDK 会返回可以用于展示 NativeExpressADView 列表
-        nativeExpressADView = adList.get(0);
-        if (nativeExpressADView.getBoundData().getAdPatternType() == AdPatternType.NATIVE_VIDEO) {
-            nativeExpressADView.setMediaListener(mediaListener);
-        }
-        nativeExpressADView.render();
-        if (_view.getChildCount() > 0) {
-            _view.removeAllViews();
-        }
+        final NativeExpressADView item = list.get(0);
+        item.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
+                layout.measure(View.MeasureSpec.makeMeasureSpec(displayMetrics.widthPixels,
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0,
+                                View.MeasureSpec.UNSPECIFIED));
 
-        // 需要保证 View 被绘制的时候是可见的，否则将无法产生曝光和收益。
-        _view.addView(nativeExpressADView);
+                final int targetWidth = layout.getMeasuredWidth();
+                final int targetHeight = layout.getMeasuredHeight();
+                HashMap<String, Object> rets = new HashMap<>();
+
+                rets.put("width", targetWidth);
+                rets.put("height", targetHeight);
+                methodChannel.invokeMethod("onADExposure", rets);
+            }
+        });
+        layout.removeAllViews();
+        layout.addView(item);
+        item.render();
+        methodChannel.invokeMethod("onADLoaded", "");
     }
 
     @Override
     public void onRenderFail(NativeExpressADView nativeExpressADView) {
-        Log.i("GDTNativeExpressView", "onRenderFail: ");
+        methodChannel.invokeMethod("onRenderFail", "");
     }
 
     @Override
     public void onRenderSuccess(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onRenderSuccess: ");
+        methodChannel.invokeMethod("onRenderSuccess", "");
     }
 
     @Override
     public void onADExposure(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADExposure: ");
+        HashMap<String, Object> rets = new HashMap<>();
+        rets.put("width", nativeExpressADView.getWidth());
+        rets.put("height", nativeExpressADView.getHeight());
+        methodChannel.invokeMethod("onADExposure", rets);
     }
 
     @Override
     public void onADClicked(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADClicked: ");
+        methodChannel.invokeMethod("onADClicked", "");
     }
 
     @Override
     public void onADClosed(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADClosed: ");
+        methodChannel.invokeMethod("onADClosed", "");
     }
 
     @Override
     public void onADLeftApplication(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADLeftApplication: ");
+        methodChannel.invokeMethod("onADLeftApplication", "");
     }
 
     @Override
     public void onADOpenOverlay(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADOpenOverlay: ");
+        methodChannel.invokeMethod("onADOpenOverlay", "");
     }
 
     @Override
     public void onADCloseOverlay(NativeExpressADView nativeExpressADView) {
-
-        Log.i("GDTNativeExpressView", "onADCloseOverlay: ");
+        methodChannel.invokeMethod("onADCloseOverlay", "");
     }
 
     @Override
-    public void onNoAD(AdError error) {
-
-        Log.i("GDTNativeExpressView", String.format("LoadInterstitialAd Fail, error code: %d, error msg: %s", error.getErrorCode(), error.getErrorMsg()));
+    public void onNoAD(AdError adError) {
+        HashMap<String, Object> rets = new HashMap<>();
+        rets.put("code", adError.getErrorCode());
+        rets.put("msg", adError.getErrorMsg());
+        methodChannel.invokeMethod("onNoAD", rets);
     }
-
-    /**
-     * 获取播放器实例
-     *
-     * 仅当视频回调{@link NativeExpressMediaListener#onVideoInit(NativeExpressADView)}调用后才会有返回值
-     *
-     * @param videoPlayer
-     * @return
-     */
-    private String getVideoInfo(AdData.VideoPlayer videoPlayer) {
-        if (videoPlayer != null) {
-            StringBuilder videoBuilder = new StringBuilder();
-            videoBuilder.append("{state:").append(videoPlayer.getVideoState()).append(",")
-                    .append("duration:").append(videoPlayer.getDuration()).append(",")
-                    .append("position:").append(videoPlayer.getCurrentPosition()).append("}");
-            return videoBuilder.toString();
-        }
-        return null;
-    }
-
-    private NativeExpressMediaListener mediaListener = new NativeExpressMediaListener() {
-        @Override
-        public void onVideoInit(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoInit: "
-                    + getVideoInfo(nativeExpressADView.getBoundData().getProperty(AdData.VideoPlayer.class)));
-        }
-
-        @Override
-        public void onVideoLoading(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoLoading");
-        }
-
-        @Override
-        public void onVideoReady(NativeExpressADView nativeExpressADView, long l) {
-            Log.i("GDTNativeExpressView", "onVideoReady");
-        }
-
-        @Override
-        public void onVideoStart(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoStart: "
-                    + getVideoInfo(nativeExpressADView.getBoundData().getProperty(AdData.VideoPlayer.class)));
-        }
-
-        @Override
-        public void onVideoPause(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoPause: "
-                    + getVideoInfo(nativeExpressADView.getBoundData().getProperty(AdData.VideoPlayer.class)));
-        }
-
-        @Override
-        public void onVideoComplete(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoComplete: "
-                    + getVideoInfo(nativeExpressADView.getBoundData().getProperty(AdData.VideoPlayer.class)));
-        }
-
-        @Override
-        public void onVideoError(NativeExpressADView nativeExpressADView, AdError adError) {
-            Log.i("GDTNativeExpressView", "onVideoError");
-        }
-
-        @Override
-        public void onVideoPageOpen(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoPageOpen");
-        }
-
-        @Override
-        public void onVideoPageClose(NativeExpressADView nativeExpressADView) {
-            Log.i("GDTNativeExpressView", "onVideoPageClose");
-        }
-    };
 }

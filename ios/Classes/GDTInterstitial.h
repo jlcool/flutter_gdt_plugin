@@ -6,14 +6,20 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import <Flutter/Flutter.h>
+#import <GDTMobSDK/GDTUnifiedInterstitialAd.h>
+
 #import "GDTConfig.h"
-#import <GDTMobSDK/GDTMobInterstitial.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface GDTInterstitial : UIView
-- (instancetype) initWithPlacementId:(NSString *)placementId tag:(NSString *)tag;
+@interface GDTInterstitial : NSObject<GDTUnifiedInterstitialAdDelegate>
+
+@property (strong, nonatomic) GDTUnifiedInterstitialAd *interstitial;
+@property (strong, nonatomic) FlutterMethodChannel *methodChannel;
++ (NSString *)createNew:(NSDictionary *)args;
++ (NSString *)getChannelName:(NSString *)uuid;
+
 @end
 
 NS_ASSUME_NONNULL_END

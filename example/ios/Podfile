@@ -37,7 +37,6 @@ target 'Runner' do
   # referring to absolute paths on developers' machines.
   system('rm -rf .symlinks')
   system('mkdir -p .symlinks/plugins')
-  pod 'GDTMobSDK', '~> 4.8.4'
   # Flutter Pods
   generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?

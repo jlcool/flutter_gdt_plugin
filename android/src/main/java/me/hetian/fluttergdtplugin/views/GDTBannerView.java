@@ -2,12 +2,16 @@ package me.hetian.fluttergdtplugin.views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 
 import com.qq.e.ads.banner.ADSize;
 import com.qq.e.ads.banner.AbstractBannerADListener;
 import com.qq.e.ads.banner.BannerView;
+import com.qq.e.ads.banner2.UnifiedBannerADListener;
+import com.qq.e.ads.banner2.UnifiedBannerView;
 import com.qq.e.ads.cfg.MultiProcessFlag;
 import com.qq.e.comm.util.AdError;
 import com.qq.e.comm.util.GDTLogger;
@@ -18,96 +22,122 @@ import java.util.Map;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
 import me.hetian.fluttergdtplugin.FlutterGdtPlugin;
 
-public class GDTBannerView implements PlatformView, MethodChannel.MethodCallHandler {
+public class GDTBannerView implements PlatformView, UnifiedBannerADListener {
+    PluginRegistry.Registrar mRegistrar;
+    UnifiedBannerView bv;
+    Context mContext;
+    int viewID;
+    Map<String, Object> params;
+    MethodChannel methodChannel;
+    String posId;
+    Activity mActivity;
+    FrameLayout layout;
+    static String TAG = "GDTBannerView";
 
-    private final MethodChannel methodChannel;
-    private final Context mContext;
-    private final Activity mActivity;
-    private final Map<String, Object> mParams;
-    private BannerView bv;
+    public GDTBannerView(Context context, PluginRegistry.Registrar registrar, int id, Map<String, Object> args){
+        this.mContext = context;
+        this.mActivity = registrar.activity();
+        this.mRegistrar = registrar;
+        this.viewID = id;
+        this.params = args;
+        methodChannel = new MethodChannel(registrar.messenger(), "plugins.hetian.me/gdtview_banner/" + id);
+        Log.i(TAG, "GDTBannerView: " + "plugins.hetian.me/gdtview_banner/" + id);
+        layout = new FrameLayout(mContext);
+        layout.setLayoutParams(getUnifiedBannerLayoutParams());
 
-    @SuppressWarnings("unchecked")
-    public GDTBannerView(Context context, Activity activity, BinaryMessenger messenger, int id, Map<String, Object> params) {
-        mContext = context;
-        mActivity = activity;
-        methodChannel = new MethodChannel(messenger, "plugins.hetian.me/gdtview_banner_" + id);
-        methodChannel.setMethodCallHandler(this);
-        mParams = params;
+        getBanner().loadAD();
+    }
 
-        MultiProcessFlag.setMultiProcess(true);
-
-        bv = new BannerView(mActivity, ADSize.BANNER, FlutterGdtPlugin.appid, (String) mParams.get("placementId"));
-        bv.setADListener(new AbstractBannerADListener() {
-
-            @Override
-            public void onNoAD(AdError error) {
-                Log.i(
-                        "AD_DEMO",
-                        String.format("Banner onNoAD，eCode = %d, eMsg = %s", error.getErrorCode(),
-                                error.getErrorMsg()));
-                HashMap<String, String> ret = new HashMap<String, String>();
-                ret.put("code", String.valueOf(error.getErrorCode()));
-                ret.put("msg", error.getErrorMsg());
-                methodChannel.invokeMethod("bannerViewFailToReceived", ret);
-            }
-
-            @Override
-            public void onADReceiv() {
-                Log.i("AD_DEMO", "ONBannerReceive");
-                methodChannel.invokeMethod("bannerViewDidReceived", "");
-            }
-            @Override
-            public void onADExposure() {
-                GDTLogger.i("On BannerAD Exposured");
-                methodChannel.invokeMethod("bannerViewWillExposure", "");
-            }
-            @Override
-            public void onADClosed() {
-                GDTLogger.i("On BannerAD Closed");
-                methodChannel.invokeMethod("bannerViewWillClose", "");
-            }
-            @Override
-            public void onADClicked() {
-                GDTLogger.i("On BannerAD Clicked");
-                methodChannel.invokeMethod("bannerViewClicked", "");
-            }
-            @Override
-            public void onADLeftApplication() {
-                GDTLogger.i("On BannerAD AdLeftApplication");
-                methodChannel.invokeMethod("bannerViewWillLeaveApplication", "");
-            }
-            @Override
-            public void onADOpenOverlay() {
-                GDTLogger.i("On BannerAD AdOpenOverlay");
-                methodChannel.invokeMethod("bannerViewWillPresentFullScreenModal", "");
-            }
-            @Override
-            public void onADCloseOverlay() {
-                GDTLogger.i("On BannerAD AdCloseOverlay");
-                methodChannel.invokeMethod("bannerViewDidPresentFullScreenModal", "");
-            }
-        });
-
-        bv.loadAD();
+    private UnifiedBannerView getBanner() {
+        String posId = (String) params.get("posId");
+        if( this.bv != null && this.posId.equals(posId)) {
+            return this.bv;
+        }
+        this.posId = posId;
+        if (this.bv != null) {
+            this.bv.destroy();
+            this.bv = null;
+        }
+        this.bv = new UnifiedBannerView(mActivity, FlutterGdtPlugin.appid, posId, this);
+        return this.bv;
     }
 
     @Override
     public View getView() {
-        return bv;
+        return layout;
+    }
+
+    private FrameLayout.LayoutParams getUnifiedBannerLayoutParams() {
+        Point screenSize = new Point();
+        mActivity.getWindowManager().getDefaultDisplay().getSize(screenSize);
+        return new FrameLayout.LayoutParams(screenSize.x,  Math.round(screenSize.x / 6.4F));
     }
 
     @Override
     public void dispose() {
-        bv = null;
+        Log.i("", "----> banner dispose");
+        if (bv != null) {
+            bv.destroy();
+            bv = null;
+        }
+
+        if (layout != null) {
+            layout.removeAllViews();
+            layout = null;
+        }
+    }
+
+    // UnifiedBannerADListener
+
+    @Override
+    public void onNoAD(AdError adError) {
+        HashMap<String, Object> rets = new HashMap<>();
+        rets.put("code", adError.getErrorCode());
+        rets.put("msg", adError.getErrorMsg());
+        methodChannel.invokeMethod("onNoAD", rets);
     }
 
     @Override
-    public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
-        if (methodCall.method.equals("load")) {
-            bv.loadAD();
-        }
+    public void onADReceive() {
+        layout.removeAllViews();
+        layout.addView(bv);
+        methodChannel.invokeMethod("onADReceive", "");
+    }
+
+    @Override
+    public void onADExposure() {
+        HashMap<String, Object> rets = new HashMap<>();
+        rets.put("width", bv.getWidth());
+        rets.put("height", bv.getHeight());
+        methodChannel.invokeMethod("onADExposure", rets);
+    }
+
+    @Override
+    public void onADClosed() {
+        methodChannel.invokeMethod("onADClosed", "");
+    }
+
+    @Override
+    public void onADClicked() {
+        methodChannel.invokeMethod("onADClicked", "");
+    }
+
+    @Override
+    public void onADLeftApplication() {
+        methodChannel.invokeMethod("onADLeftApplication", "");
+    }
+
+    @Override
+    public void onADOpenOverlay() {
+        methodChannel.invokeMethod("onADOpenOverlay", "");
+    }
+
+    @Override
+    public void onADCloseOverlay() {
+        methodChannel.invokeMethod("onADCloseOverlay", "");
     }
 }

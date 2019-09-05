@@ -6,24 +6,23 @@ import android.content.Context;
 import java.util.Map;
 
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 import me.hetian.fluttergdtplugin.views.GDTBannerView;
 
 public class GDTBannerFactory extends PlatformViewFactory {
-    BinaryMessenger messenger;
-    Activity activity;
-    public GDTBannerFactory(BinaryMessenger messenger, Activity activity) {
+    PluginRegistry.Registrar mRegistrar;
+    public GDTBannerFactory(PluginRegistry.Registrar registrar) {
         super(StandardMessageCodec.INSTANCE);
-        this.messenger = messenger;
-        this.activity = activity;
+        this.mRegistrar = registrar;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public PlatformView create(Context context, int id, Object args) {
         Map<String, Object> params = (Map<String, Object>) args;
-        return new GDTBannerView(context, activity, messenger, id, params);
+        return new GDTBannerView(context, mRegistrar, id, params);
     }
 }

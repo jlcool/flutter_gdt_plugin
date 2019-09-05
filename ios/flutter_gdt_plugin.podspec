@@ -16,8 +16,8 @@ Pod::Spec.new do |s|
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'GDTMobSDK'
-
-
+  s.frameworks = 'AdSupport', 'CoreLocation', 'QuartzCore', 'SystemConfiguration', 'CoreTelephony', 'Security', 'StoreKit', 'AVFoundation', 'WebKit'
+  s.library = 'z', 'xml2'
   s.ios.deployment_target = '8.0'
 end
 

@@ -22,6 +22,14 @@
 - (void) initGDTConfig:(FlutterMethodCall *)call
 {
     self.appid = call.arguments[@"appid"];
+    [GDTSDKConfig enableGPS:YES];
 }
 
++ (NSString *)createUUID
+{
+    CFUUIDRef uuidObject = CFUUIDCreate(kCFAllocatorDefault);
+    NSString *uuidStr = (NSString  *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuidObject));
+    CFRelease(uuidObject);
+    return uuidStr;
+}
 @end

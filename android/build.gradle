@@ -47,11 +47,13 @@ repositories {
 }
 
 dependencies {
-//    implementation fileTree(include: ['*.jar'], dir: 'libs')
-
-    implementation files('libs/GDTUnionSDK.4.22.584.min.jar')
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
     implementation('com.github.androidquery:androidquery:0.26.9'){
         exclude module: 'androidquery'
     }
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+//
+    implementation 'com.tencent.bugly:crashreport:latest.release'
+    implementation 'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:+'
 }

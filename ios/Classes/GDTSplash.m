@@ -6,52 +6,53 @@
 //
 
 #import "GDTSplash.h"
-#import "FlutterGdtPlugin.h"
-@interface GDTSplash () <GDTSplashAdDelegate>
+#import "FlutterPluginCache.h"
 
-@property (nonatomic, strong) GDTSplashAd *splashAd;
-@property (nonatomic, strong) UIView *bottomView;
-
-@end
 @implementation GDTSplash{
-    NSString *_placementId;
-    NSString *_tag;
+    NSObject<FlutterBinaryMessenger>*_messenger;
+    NSObject<FlutterPluginRegistrar>*_registrar;
+    FlutterMethodChannel *_methodChannel;
+    GDTSplashAd *_splashAd;
+    UIView *_bottomView;
 }
 
-- (instancetype) initWithPlacementId:(NSString *)placementId tag:(NSString *)tag{
+- (instancetype) initWithMessenger:(NSObject<FlutterPluginRegistrar>*)registrar{
     self = [super init];
     if (self) {
-        _placementId = placementId;
-        _tag = tag;
-        [self loadAd];
+        _messenger = registrar.messenger;
+        _registrar = registrar;
     }
     return self;
 }
 
-- (void) loadAd
+- (void) show:(NSDictionary *)args result:(FlutterResult)result
 {
-    self.splashAd = [[GDTSplashAd alloc] initWithAppId:[GDTConfig.sharedInstance appid] placementId:_placementId];
-    self.splashAd.delegate = self;
-    self.splashAd.fetchDelay = 5;
+    NSString *posId = args[@"posId"];
+    _splashAd = [[GDTSplashAd alloc] initWithAppId:[GDTConfig sharedInstance].appid placementId:posId];
+    _splashAd.delegate = self;
+    _splashAd.fetchDelay = 3;
+    _splashAd.backgroundColor = [UIColor clearColor];
     
-    // 在这里更换c开屏背景
-    UIImage *splashImage = [UIImage imageNamed:@"SplashNormal"];
-    if (IS_IPHONEX) {
-        splashImage = [UIImage imageNamed:@"SplashX"];
-    } else if ([UIScreen mainScreen].bounds.size.height == 480) {
-        splashImage = [UIImage imageNamed:@"SplashSmall"];
+    if ([args[@"has_footer"] boolValue]) {
+        NSString* key = [_registrar lookupKeyForAsset:[args objectForKey:@"logo_name"]];
+        NSString* path = [[NSBundle mainBundle] pathForResource:key ofType:nil];
+        UIImage *logoImg=[UIImage imageWithData:[[NSData alloc] initWithContentsOfFile:path]];
+        CGFloat footerHeight = logoImg.size.height / 2;
+        _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width, footerHeight)];
+        _bottomView.backgroundColor = [UIColor whiteColor];
+        UIImageView *logo = [[UIImageView alloc] initWithImage:logoImg];
+        logo.frame = CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width, footerHeight - 24.0);
+        logo.center = _bottomView.center;
+        logo.contentMode = UIViewContentModeScaleAspectFit;
+        
+        [_bottomView addSubview:logo];
     }
-    self.splashAd.backgroundImage = splashImage;
-    
-    // 底部布局
-    self.bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width, [[UIScreen mainScreen] bounds].size.height * 0.25)];
-    self.bottomView.backgroundColor = [UIColor whiteColor];
-    UIImageView *logo = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"SplashLogo"]];
-    logo.frame = CGRectMake(0, 0, 311, 47);
-    logo.center = self.bottomView.center;
-    [self.bottomView addSubview:logo];
+    NSString *uuid = [GDTConfig createUUID];
+    NSString *channelName = [NSString stringWithFormat:@"plugins.hetian.me/gdt_plugins/shlash/%@", uuid];
+    _methodChannel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:_messenger];
+    result(@{@"channel_name":channelName});
     UIWindow *fK = [[UIApplication sharedApplication] keyWindow];
-    [self.splashAd loadAdAndShowInWindow:fK withBottomView:self.bottomView skipView:nil];
+    [_splashAd loadAdAndShowInWindow:fK withBottomView:_bottomView];
 }
 
 /**
@@ -59,8 +60,7 @@
  */
 - (void)splashAdSuccessPresentScreen:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdSuccessPresentScreen");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdSuccessPresentScreen" arguments:@{@"tag": _tag}];
+    [_methodChannel invokeMethod:@"onADPresent" arguments:@""];
 }
 
 /**
@@ -68,11 +68,10 @@
  */
 - (void)splashAdFailToPresent:(GDTSplashAd *)splashAd withError:(NSError *)error
 {
-    NSLog(@"splashAdFailToPresent");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdFailToPresent" arguments:@{@"error": @{
-                                                                @"msg": error.localizedDescription,
-                                                                @"code": @(error.code),
-                                                                }, @"tag": _tag}];
+    [_methodChannel invokeMethod:@"onNoAD" arguments:@{
+                                                       @"code": @(error.code),
+                                                       @"msg": error.localizedDescription,
+                                                       }];
 }
 
 /**
@@ -81,8 +80,7 @@
  */
 - (void)splashAdApplicationWillEnterBackground:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdApplicationWillEnterBackground");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdApplicationWillEnterBackground" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -90,8 +88,7 @@
  */
 - (void)splashAdExposured:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdExposured");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdExposured" arguments:@{@"tag": _tag}];
+    [_methodChannel invokeMethod:@"onADExposure" arguments:@""];
 }
 
 /**
@@ -99,8 +96,7 @@
  */
 - (void)splashAdClicked:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdClicked");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdClicked" arguments:@{@"tag": _tag}];
+    [_methodChannel invokeMethod:@"onADClicked" arguments:@""];
 }
 
 /**
@@ -108,10 +104,7 @@
  */
 - (void)splashAdWillClosed:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdWillClosed");
-    self.splashAd = nil;
-    [FlutterGdtPlugin.sharedInstance removeGDTShlash];
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillClosed" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -119,8 +112,10 @@
  */
 - (void)splashAdClosed:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdClosed");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdClosed" arguments:@{@"tag": _tag}];
+    [_methodChannel invokeMethod:@"onADDismissed" arguments:@""];
+    _splashAd = NULL;
+    _bottomView = NULL;
+    [FlutterPluginCache sharedInstance].splash = NULL;
 }
 
 /**
@@ -128,8 +123,7 @@
  */
 - (void)splashAdWillPresentFullScreenModal:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdWillPresentFullScreenModal");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillPresentFullScreenModal" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -137,8 +131,7 @@
  */
 - (void)splashAdDidPresentFullScreenModal:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdDidPresentFullScreenModal");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdDidPresentFullScreenModal" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -146,8 +139,7 @@
  */
 - (void)splashAdWillDismissFullScreenModal:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdWillDismissFullScreenModal");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdWillDismissFullScreenModal" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -155,8 +147,7 @@
  */
 - (void)splashAdDidDismissFullScreenModal:(GDTSplashAd *)splashAd
 {
-    NSLog(@"splashAdDidDismissFullScreenModal");
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdDidDismissFullScreenModal" arguments:@{@"tag": _tag}];
+    
 }
 
 /**
@@ -164,8 +155,8 @@
  */
 - (void)splashAdLifeTime:(NSUInteger)time
 {
-    NSLog(@"splashAdLifeTime ----> %ld", time);
-    [[FlutterGdtPlugin sharedInstance].channel invokeMethod:@"splashAdLifeTime" arguments:@{@"time": @(time), @"tag": _tag}];
+    [_methodChannel invokeMethod:@"onADTick" arguments:@{@"millisUntilFinished": @(time)}];
 }
+
 
 @end

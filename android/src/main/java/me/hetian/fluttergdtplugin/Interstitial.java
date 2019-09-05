@@ -1,98 +1,149 @@
 package me.hetian.fluttergdtplugin;
 
-import android.app.Activity;
 import android.util.Log;
 
-import com.qq.e.ads.cfg.MultiProcessFlag;
-import com.qq.e.ads.interstitial.AbstractInterstitialADListener;
-import com.qq.e.ads.interstitial.InterstitialAD;
+
+import com.qq.e.ads.interstitial2.UnifiedInterstitialAD;
+import com.qq.e.ads.interstitial2.UnifiedInterstitialADListener;
 import com.qq.e.comm.util.AdError;
-import com.qq.e.comm.util.GDTLogger;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
-public class Interstitial {
-    private final String appid;
-    private final String placementId;
-    private final Activity mActivity;
-    private final String tag;
+public class Interstitial implements UnifiedInterstitialADListener, MethodChannel.MethodCallHandler {
+    MethodChannel methodChannel;
+    Map<String, Object> params;
+    UnifiedInterstitialAD iad;
+    String posId;
+    String uuid;
+    private static HashMap<String, Interstitial> _caches;
 
-    public Interstitial(String appid, String placementId, String tag, Activity activity) {
-        this.appid = appid;
-        this.placementId = placementId;
-        this.mActivity = activity;
-        this.tag = tag;
+    static String CreateInterstitial(Map<String, Object> args) {
+        String uuid = UUID.randomUUID().toString().replaceAll("-","");
+        if (_caches == null) {
+            _caches = new HashMap<>();
+        }
+        _caches.put(uuid, new Interstitial(uuid, args));
+        return uuid;
     }
 
-    public void show() {
-        MultiProcessFlag.setMultiProcess(true);
-        final InterstitialAD iad = new InterstitialAD(mActivity, appid, placementId);
-        iad.setADListener(new AbstractInterstitialADListener() {
+    static Interstitial GetInstance(String uuid) {
+        if (_caches == null) {
+            return null;
+        }
+        return _caches.get(uuid);
+    }
 
-            @Override
-            public void onADReceive() {
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialSuccessToLoadAd", ret);
-                iad.show();
-            }
+    static void ClearCaches(String uuid) {
+        if (_caches == null) {
+            return ;
+        } else {
+            _caches.remove(uuid);
+        }
+    }
 
-            @Override
-            public void onNoAD(AdError error) {
-                Log.i("GDT_AD", String.format("LoadInterstitialAd Fail, error code: %d, error msg: %s", error.getErrorCode(), error.getErrorMsg()));
-                HashMap<String, String> err = new HashMap<String, String>();
-                err.put("code", String.valueOf(error.getErrorCode()));
-                err.put("msg", error.getErrorMsg());
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("error", err);
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialFailToLoadAd", ret);
-            }
+    static String GetChannelName(String uuid) {
+        return "plugins.hetian.me/gdt_plugins/interstitial/" + uuid;
+    }
 
-            @Override
-            public void onADOpened() {
-                GDTLogger.i("ON InterstitialAD Opened");
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialSuccessToLoadAd", ret);
-            }
+    Interstitial(String uuid, Map<String, Object> args) {
+        this.uuid = uuid;
+        params = args;
+        this.posId = (String) params.get("posId");
+        methodChannel = new MethodChannel(FlutterGdtPlugin.registrar.messenger(), GetChannelName(uuid));
+        methodChannel.setMethodCallHandler(this);
+    }
 
-            @Override
-            public void onADExposure() {
-                GDTLogger.i("ON InterstitialAD Exposure");
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialWillPresentScreen", ret);
-            }
-
-            @Override
-            public void onADClicked() {
-                GDTLogger.i("ON InterstitialAD Clicked");
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialClicked", ret);
-            }
-
-            @Override
-            public void onADLeftApplication() {
-                GDTLogger.i("ON InterstitialAD LeftApplication");
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialApplicationWillEnterBackground", ret);
-            }
-
-            @Override
-            public void onADClosed() {
-                GDTLogger.i("ON InterstitialAD Closed");
-                HashMap<String, Object> ret = new HashMap<String, Object>();
-                ret.put("tag", tag);
-                FlutterGdtPlugin.channel.invokeMethod("interstitialDidDismissScreen", ret);
-            }
-        });
-        //请求插屏广告，每次重新请求都可以调用此方法。
+    private void load(MethodChannel.Result result) {
+        if (this.iad == null) {
+            iad = new UnifiedInterstitialAD(FlutterGdtPlugin.registrar.activity(), FlutterGdtPlugin.appid, posId, this);
+        }
         iad.loadAD();
+        result.success(true);
+    }
+
+    public void show(MethodChannel.Result result) {
+        if (iad == null) {
+            result.success(false);
+        } else {
+            iad.show();
+            result.success(true);
+        }
+    }
+
+    public void close() {
+        if (iad != null) {
+            iad.close();
+        }
+    }
+
+    public void destroy(MethodChannel.Result result) {
+        iad.destroy();
+        ClearCaches(uuid);
+        result.success(true);
+    }
+
+    // InterstitialADListener
+
+    @Override
+    public void onADReceive() {
+        methodChannel.invokeMethod("onADReceive", "");
+    }
+
+    @Override
+    public void onNoAD(AdError adError) {
+        HashMap<String, Object> rets = new HashMap<>();
+        rets.put("code", adError.getErrorCode());
+        rets.put("msg", adError.getErrorMsg());
+        methodChannel.invokeMethod("onNoAD", rets);
+    }
+
+    @Override
+    public void onADOpened() {
+        methodChannel.invokeMethod("onADOpened", "");
+    }
+
+    @Override
+    public void onADExposure() {
+        methodChannel.invokeMethod("onADExposure", "");
+    }
+
+    @Override
+    public void onADClicked() {
+        methodChannel.invokeMethod("onADClicked", "");
+    }
+
+    @Override
+    public void onADLeftApplication() {
+        methodChannel.invokeMethod("onADLeftApplication", "");
+    }
+
+    @Override
+    public void onADClosed() {
+        methodChannel.invokeMethod("onADClosed", "");
+    }
+
+    @Override
+    public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
+        switch (methodCall.method) {
+            case "load":
+                load(result);
+                break;
+            case "show":
+                show(result);
+                break;
+            case "close":
+                close();
+                result.success(true);
+                break;
+            case "destroy":
+                destroy(result);
+                break;
+        }
     }
 }
 
