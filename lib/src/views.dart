@@ -8,11 +8,12 @@ import 'package:flutter_gdt_plugin/src/flutterGdtPlugin.dart';
 import 'package:flutter_gdt_plugin/src/listeners.dart';
 
 class GDTBannerView extends StatefulWidget {
-	final String posId;
+	final String androidPosID;
+  final String iosPosID;
 	final BannerListener listener;
 
-	GDTBannerView ({Key key, @required this.posId, this.listener})
-					: assert(posId != null, "必须设置广告ID"),
+	GDTBannerView ({Key key, this.androidPosID, this.iosPosID, this.listener})
+					: assert(androidPosID != null || iosPosID != null, "必须设置广告ID"),
 						super(key: key);
 
 	_GDTBannerViewState createState () => _GDTBannerViewState();
@@ -34,11 +35,14 @@ class _GDTBannerViewState extends State<GDTBannerView> {
 			return SizedBox();
 		}
 		if (Platform.isAndroid) {
+      if (widget.androidPosID == null) {
+        return SizedBox();
+      }
 			return SizedBox(
 				height: _size.height,
 				child: AndroidView(
 					viewType: "plugins.hetian.me/gdtview_banner",
-					creationParams: {"posId": widget.posId},
+					creationParams: {"posId": widget.androidPosID},
 					creationParamsCodec: const StandardMessageCodec(),
 					onPlatformViewCreated: _onPlatformViewCreated,
 					gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
@@ -48,11 +52,14 @@ class _GDTBannerViewState extends State<GDTBannerView> {
 				),
 			);
 		} else if (Platform.isIOS) {
+      if (widget.iosPosID == null) {
+        return SizedBox();
+      }
 			return SizedBox(
 				height: _size.height,
 				child: UiKitView(
 					viewType: "plugins.hetian.me/gdtview_banner",
-					creationParams: {"posId": widget.posId},
+					creationParams: {"posId": widget.iosPosID},
 					creationParamsCodec: const StandardMessageCodec(),
 					onPlatformViewCreated: _onPlatformViewCreated,
 					gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
@@ -90,15 +97,22 @@ class _GDTBannerViewState extends State<GDTBannerView> {
 			_size = Size.zero;
 		});
 	}
+
+	@override
+	void dispose() {
+		_listener?.dispose();
+		super.dispose();
+	}
 }
 
 
 class GDTNativeExpressView extends StatefulWidget {
-	final String posId;
+	final String androidPosID;
+  final String iosPosID;
 	final NativeExpressListener listener;
 
-	GDTNativeExpressView ({Key key, @required this.posId, this.listener})
-					: assert(posId != null, "必须设置广告ID"),
+	GDTNativeExpressView ({Key key, this.androidPosID, this.iosPosID, this.listener})
+					: assert(androidPosID != null || iosPosID != null, "必须设置广告ID"),
 						super(key: key);
 
 	_GDTNativeExpressViewState createState () => _GDTNativeExpressViewState();
@@ -111,7 +125,7 @@ class _GDTNativeExpressViewState extends State<GDTNativeExpressView> {
 	@override
 	void initState () {
 		super.initState();
-		_size = Size.fromHeight(100);
+		_size = Size.fromHeight(1);
 	}
 
 	@override
@@ -120,11 +134,14 @@ class _GDTNativeExpressViewState extends State<GDTNativeExpressView> {
 			return SizedBox();
 		}
 		if (Platform.isAndroid) {
+      if (widget.androidPosID == null) {
+        return SizedBox();
+      }
 			return Container(
 				height: _size.height,
 				child: AndroidView(
 					viewType: "plugins.hetian.me/gdtview_native",
-					creationParams: {"posId": widget.posId},
+					creationParams: {"posId": widget.androidPosID},
 					creationParamsCodec: const StandardMessageCodec(),
 					onPlatformViewCreated: _onPlatformViewCreated,
 					gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
@@ -134,11 +151,14 @@ class _GDTNativeExpressViewState extends State<GDTNativeExpressView> {
 				),
 			);
 		} else if (Platform.isIOS) {
+      if (widget.iosPosID == null) {
+        return SizedBox();
+      }
 			return SizedBox(
 				height: _size.height,
 				child: UiKitView(
 					viewType: "plugins.hetian.me/gdtview_native",
-					creationParams: {"posId": widget.posId},
+					creationParams: {"posId": widget.iosPosID},
 					creationParamsCodec: const StandardMessageCodec(),
 					onPlatformViewCreated: _onPlatformViewCreated,
 					gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
@@ -178,5 +198,11 @@ class _GDTNativeExpressViewState extends State<GDTNativeExpressView> {
 		setState(() {
 			_size = Size.zero;
 		});
+	}
+
+	@override
+	void dispose() {
+		_listener?.dispose();
+		super.dispose();
 	}
 }

@@ -2,7 +2,9 @@ package me.hetian.fluttergdtplugin.views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Point;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -104,6 +106,24 @@ public class GDTBannerView implements PlatformView, UnifiedBannerADListener {
     @Override
     public void onADReceive() {
         layout.removeAllViews();
+        bv.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
+                layout.measure(View.MeasureSpec.makeMeasureSpec(displayMetrics.widthPixels,
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0,
+                                View.MeasureSpec.UNSPECIFIED));
+
+                final int targetWidth = layout.getMeasuredWidth();
+                final int targetHeight = layout.getMeasuredHeight();
+                HashMap<String, Object> rets = new HashMap<>();
+
+                rets.put("width", targetWidth);
+                rets.put("height", targetHeight);
+                methodChannel.invokeMethod("onADExposure", rets);
+            }
+        });
         layout.addView(bv);
         methodChannel.invokeMethod("onADReceive", "");
     }

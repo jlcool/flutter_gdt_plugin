@@ -334,6 +334,16 @@ class BannerListener {
 		}
 	}
 
+	void dispose() {
+		_onNoADStream?.close();
+		_onADReceiveStream?.close();
+		_onADExposureStream?.close();
+		_onADClosedStream?.close();
+		_onADClickedStream?.close();
+		_onADLeftApplicationStream?.close();
+		_onADOpenOverlayStream?.close();
+		_onADCloseOverlayStream?.close();
+	}
 }
 
 class NativeExpressListener {
@@ -429,7 +439,6 @@ class NativeExpressListener {
 	}
 
 	Future _handleMessages (MethodCall call) async {
-		print(["----->", call.method, call.arguments]);
 		switch (call.method) {
 			case "onNoAD":
 				this.onNoAD(call.arguments["code"], call.arguments["msg"]);
@@ -462,5 +471,18 @@ class NativeExpressListener {
 				this.onADCloseOverlay();
 				break;
 		}
+	}
+
+	void dispose() {
+		_onNoADStream?.close();
+		_onADLoadedStream?.close();
+		_onRenderFailStream?.close();
+		_onRenderSuccessStream?.close();
+		_onADExposureStream?.close();
+		_onADClickedStream?.close();
+		_onADClosedStream?.close();
+		_onADLeftApplicationStream?.close();
+		_onADOpenOverlayStream?.close();
+		_onADCloseOverlayStream?.close();
 	}
 }
