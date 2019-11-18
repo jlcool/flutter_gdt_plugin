@@ -34,6 +34,7 @@
         android:id="@+id/splash_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="100dp"
         android:layout_above="@id/app_logo"/>
 
     <!-- 4.自定义跳过按钮区域：开发者可以根据需要自己实现不同样式的跳过按钮 -->

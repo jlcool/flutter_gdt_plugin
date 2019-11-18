@@ -12,7 +12,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    FlutterGdtPlugin.init("1105344611");
+    FlutterGdtPlugin.init("1105344611").then((_){
+      FlutterGdtPlugin.showSplash("8863364436303842593",false, "dddd");
+    });
   }
 
   @override
@@ -25,43 +27,15 @@ class _MyAppState extends State<MyApp> {
         body: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              Container(
-                height: 120,
-                alignment: Alignment.center,
-                color: Colors.redAccent,
-                child: FlutterGDTBannerView(
-                  placementId: "4090812164690039",
-                  interval: 30,
-                  isAnimation: true,
-                  showClose: false,
-                  isGpsOn: false,
-                  size: 0,
-                ),
-              ),
-              Container(
-                height: 320,
-                color: Colors.blue,
-                child: FlutterGDTNativeView(
-                  placementId: "5030722621265924",
-                  width: 418,
-                  height: 380,
-                  videoAutoPlayOnWWAN: true,
-                  videoMuted: true,
-                  onCreate: (c) {},
-                ),
-              ),
               FlatButton(
                   onPressed: () {
                     FlutterGdtPlugin.showInterstitial(
-                        "2030814134092814", "sdsds");
+                        "2030814134092814");
                   },
                   child: Text("打开插屏")),
               FlatButton(
-                  onPressed: FlutterGdtPlugin.closeInterstitial,
-                  child: Text("关闭插屏")),
-              FlatButton(
                   onPressed: () {
-                    FlutterGdtPlugin.showSplash("9040714184494018", "dddd");
+                    FlutterGdtPlugin.showSplash("8863364436303842593",false, "dddd");
                   },
                   child: Text("开屏广告")),
             ],
