@@ -12,8 +12,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    FlutterGdtPlugin.requestPermission();
     FlutterGdtPlugin.init("1105344611").then((_){
-      FlutterGdtPlugin.showSplash("8863364436303842593",false, "dddd");
+      FlutterGdtPlugin.showSplash("9040714184494018",true, "assets/images/bottom.png");
     });
   }
 
@@ -35,7 +36,7 @@ class _MyAppState extends State<MyApp> {
                   child: Text("打开插屏")),
               FlatButton(
                   onPressed: () {
-                    FlutterGdtPlugin.showSplash("8863364436303842593",false, "dddd");
+                    FlutterGdtPlugin.showSplash("8863364436303842593",true, "assets/images/bottom.png");
                   },
                   child: Text("开屏广告")),
             ],

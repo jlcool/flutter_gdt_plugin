@@ -37,7 +37,7 @@
         NSString* key = [_registrar lookupKeyForAsset:[args objectForKey:@"logo_name"]];
         NSString* path = [[NSBundle mainBundle] pathForResource:key ofType:nil];
         UIImage *logoImg=[UIImage imageWithData:[[NSData alloc] initWithContentsOfFile:path]];
-        CGFloat footerHeight = logoImg.size.height / 2;
+        CGFloat footerHeight = logoImg.size.height / 3;
         _bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width, footerHeight)];
         _bottomView.backgroundColor = [UIColor whiteColor];
         UIImageView *logo = [[UIImageView alloc] initWithImage:logoImg];
