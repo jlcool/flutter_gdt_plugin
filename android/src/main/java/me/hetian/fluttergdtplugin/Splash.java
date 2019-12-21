@@ -93,7 +93,7 @@ public class Splash implements SplashADListener{
      *
      * @param activity        展示广告的activity
      * @param adContainer     展示广告的大容器
-     * @param skipContainer   自定义的跳过按钮：传入该view给SDK后，SDK会自动给它绑定点击跳过事件。SkipView的样式可以由开发者自由定制，其尺寸限制请参考activity_splash.xml或者接入文档中的说明。
+     * @param skipContainer   自，S定义的跳过按钮：传入该view给SDK后DK会自动给它绑定点击跳过事件。SkipView的样式可以由开发者自由定制，其尺寸限制请参考activity_splash.xml或者接入文档中的说明。
      * @param appId           应用ID
      * @param posId           广告位ID
      * @param adListener      广告状态监听器
@@ -125,6 +125,13 @@ public class Splash implements SplashADListener{
         rets.put("code", adError.getErrorCode());
         rets.put("msg", adError.getErrorMsg());
         methodChannel.invokeMethod("onNoAD", rets);
+        if (layout != null) {
+            ViewGroup vg = (ViewGroup) layout.getParent();
+            vg.removeView(layout);
+            layout = null;
+            splashAD = null;
+        }
+        _Splash = null;
     }
 
     @Override
