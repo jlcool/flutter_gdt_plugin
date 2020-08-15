@@ -44,7 +44,6 @@
         CGRect rect = {CGPointMake(padd / 2, 0), CGSizeMake(375, 60)};
         _bannerView = [[GDTUnifiedBannerView alloc]
                        initWithFrame:rect
-                       appId:[GDTConfig sharedInstance].appid
                        placementId:posId
                        viewController:[UIApplication sharedApplication].delegate.window.rootViewController];
         _bannerView.animated = YES;
